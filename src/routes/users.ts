@@ -6,7 +6,7 @@ export async function usersRoutes(app: FastifyInstance) {
   app.post("/register", async (request, reply) => {
     const createUserBodySchema = z.object({
       email: z.string(),
-      password: z.string(),
+      password: z.string().min(6),
     });
 
     const { email, password } = createUserBodySchema.parse(request.body);
@@ -18,10 +18,22 @@ export async function usersRoutes(app: FastifyInstance) {
     }
 
     await knex("users").insert({
+      id: crypto.randomUUID(),
       email,
       password,
     });
 
     return reply.status(201).send({ message: "User registered successfully" });
   });
+
+  app.get(
+    "/protected",
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      return reply.send({
+        message: "Você está autenticado!",
+        user: request.user,
+      });
+    }
+  );
 }
