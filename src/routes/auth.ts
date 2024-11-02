@@ -6,7 +6,7 @@ export async function authRoutes(app: FastifyInstance) {
   app.post("/login", async (request, reply) => {
     const authBodySchema = z.object({
       email: z.string(),
-      password: z.string(),
+      password: z.string().min(6),
     });
 
     const { email, password } = authBodySchema.parse(request.body);
@@ -17,8 +17,8 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(401).send({ message: "Invalid email or password" });
     }
 
-    const token = app.jwt.sign({ email: user.email });
+    const token = app.jwt.sign({ id: user.id, email: user.email });
 
-    return reply.send({ token });
+    return reply.send({ message: "Login successful", token });
   });
 }
