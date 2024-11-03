@@ -159,31 +159,31 @@ export async function mealsRoutes(app: FastifyInstance) {
           .select("*")
           .orderBy("meal_time", "desc");
 
-        const recordedMeals = meals.length;
+        const totalMeals = meals.length;
         const mealsInDietLength = meals.filter((meal) => meal.in_diet).length;
         const mealsOutDietLength = meals.filter((meal) => !meal.in_diet).length;
 
-        const bestSequenceOfMealsInDiet = meals.reduce(
+        const { bestOnDietSequence } = meals.reduce(
           (acc, meal) => {
             if (meal.in_diet) {
               acc.currentSequence += 1;
-              acc.biggestSequence = Math.max(
+              acc.bestOnDietSequence = Math.max(
                 acc.currentSequence,
-                acc.biggestSequence
+                acc.bestOnDietSequence
               );
             } else {
               acc.currentSequence = 0;
             }
             return acc;
           },
-          { currentSequence: 0, biggestSequence: 0 }
+          { currentSequence: 0, bestOnDietSequence: 0 }
         );
 
         return reply.send({
-          total: recordedMeals,
-          mealsInDiet: mealsInDietLength,
-          mealsOutDiet: mealsOutDietLength,
-          bestSequence: bestSequenceOfMealsInDiet.biggestSequence,
+          totalMeals,
+          mealsInDietLength,
+          mealsOutDietLength,
+          bestOnDietSequence,
         });
       } catch (error) {
         console.error(error);
