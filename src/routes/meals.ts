@@ -146,4 +146,49 @@ export async function mealsRoutes(app: FastifyInstance) {
       }
     }
   );
+
+  app.get(
+    "/metrics",
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      try {
+        const { id: user_id } = request.user as { id: string };
+
+        const meals = await knex("meals")
+          .where("user_id", user_id)
+          .select("*")
+          .orderBy("meal_time", "desc");
+
+        const recordedMeals = meals.length;
+        const mealsInDietLength = meals.filter((meal) => meal.in_diet).length;
+        const mealsOutDietLength = meals.filter((meal) => !meal.in_diet).length;
+
+        const bestSequenceOfMealsInDiet = meals.reduce(
+          (acc, meal) => {
+            if (meal.in_diet) {
+              acc.currentSequence += 1;
+              acc.biggestSequence = Math.max(
+                acc.currentSequence,
+                acc.biggestSequence
+              );
+            } else {
+              acc.currentSequence = 0;
+            }
+            return acc;
+          },
+          { currentSequence: 0, biggestSequence: 0 }
+        );
+
+        return reply.send({
+          total: recordedMeals,
+          mealsInDiet: mealsInDietLength,
+          mealsOutDiet: mealsOutDietLength,
+          bestSequence: bestSequenceOfMealsInDiet.biggestSequence,
+        });
+      } catch (error) {
+        console.error(error);
+        return reply.status(500).send({ message: "Internal Server Error" });
+      }
+    }
+  );
 }
