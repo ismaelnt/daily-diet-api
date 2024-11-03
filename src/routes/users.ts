@@ -5,7 +5,7 @@ import { knex } from "../database";
 export async function usersRoutes(app: FastifyInstance) {
   app.post("/register", async (request, reply) => {
     const createUserBodySchema = z.object({
-      email: z.string(),
+      email: z.string().email(),
       password: z.string().min(6),
     });
 
